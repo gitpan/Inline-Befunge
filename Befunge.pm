@@ -1,4 +1,4 @@
-# $Id: Befunge.pm,v 1.3 2002/04/16 16:42:40 jquelin Exp $
+# $Id: Befunge.pm,v 1.5 2002/04/22 18:47:49 jquelin Exp $
 #
 # Copyright (c) 2002 Jerome Quelin <jquelin@cpan.org>
 # All rights reserved.
@@ -59,8 +59,8 @@ The recommended way of using Inline is the following:
 
       Befunge source code goes here.
 
-But there's much more way to use Inline. You'll find them in C<perldoc
-Inline>.
+But there are much more ways to use Inline. You'll find them in
+C<perldoc Inline>.
 
 
 =head2 Defining functions
@@ -71,10 +71,10 @@ O'Rourke) in order for Inline to work: each subroutine definition
 should be prepended with a comment C<;:subname;> (notice the colon
 prepended).
 
-You will notice how smart it is, since it's enclosed in comments, and
+You'll notice how smart it is, since it's enclosed in comments, and
 therefore the overall meaning of the code isn't changed.
 
-You can define you subroutines in any of the four cardinal directions,
+You can define your subroutines in any of the four cardinal directions,
 and the subroutine velocity will be the velocity defined by the
 comment. That is, if you define a subroutine in a vertical comment
 from bottom to top, when called, the subroutine will start with a
@@ -123,9 +123,9 @@ Strings are pushed as 0gnirts.
 B</!\> Remember, Befunge works with a stack: the first argument will
 be the first pushed, ie, the deeper in the stack.
 
-For example, when calling a inlined Befunge function like this: C<foo(
-'bar', 7, 'baz' );>, then the stack will be (bottom->top): C<(0 114 97
-98 7 0 122 97 98)>.
+For example, when calling an inlined Befunge function like this:
+C<foo( 'bar', 7, 'baz' );>, then the stack will be (bottom->top): C<(0
+114 97 98 7 0 122 97 98)>.
 
 
 =head2 Return values
@@ -190,7 +190,7 @@ use Language::Befunge;
 use base qw! Inline !;
 
 # Public variables of the module.
-our $VERSION   = '0.03';
+our $VERSION   = '0.04';
 
 
 =head1 PUBLIC METHODS
@@ -289,13 +289,7 @@ sub load {
               $ip->dy( $funcs->{$subname}[3] );
 
               # Fill the stack with arguments.
-              foreach my $arg ( @_ ) {
-                  $ip->spush
-                    ( ($arg =~ /^-?\d+$/) ?
-                        $arg                                    # A number.
-                      : reverse map {ord} split //, $arg.chr(0) # A string.
-                    );
-              }
+              $ip->spush_args( @_ );
 
               # Initialize the interpreter.
               $bef->ips( [ $ip ] );

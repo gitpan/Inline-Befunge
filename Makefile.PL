@@ -1,5 +1,5 @@
-# This -*- perl -*- script writes the Makefile for Language::Befunge
-# $Id: Makefile.PL,v 1.5 2002/04/16 15:43:33 jquelin Exp $
+# This -*- perl -*- script writes the Makefile for Inline::Befunge
+# $Id: Makefile.PL,v 1.8 2002/04/22 18:52:22 jquelin Exp $
 
 use strict;
 use ExtUtils::MakeMaker;
@@ -31,7 +31,7 @@ EOT
 print "Checking for Language::Befunge...";
 eval {
     require Language::Befunge;
-    Language::Befunge->VERSION(0.35);
+    Language::Befunge->VERSION(0.36);
 };
 if ($@) {
     print " failed\n";
@@ -60,7 +60,7 @@ print "\n";
 WriteMakefile(
     NAME          => 'Inline::Befunge',
     VERSION_FROM  => 'Befunge.pm',
-    PREREQ_PM	  => { Inline => 0.43, Language::Befunge => 0.35 },
+    PREREQ_PM	  => { Inline => 0.43, "Language::Befunge" => 0.36 },
     clean         => { FILES => "*~ t/*~ MANIFEST.bak _Inline" },
     ABSTRACT_FROM => 'Befunge.pm',
     AUTHOR        => 'Jerome Quelin, <jquelin@cpan.org>',

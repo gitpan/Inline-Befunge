@@ -1,5 +1,10 @@
 Revision history for Perl extension Inline::Befunge.
 
+0.04 Mon Apr 22 20:49:29 CEST 2002
+        - Minor pod update.
+        - Minor tweak in Makefile.PL (should not be necessary, but...)
+        - Taking advantage of IP::spush_args
+
 0.03 Tue Apr 16 18:43:13 CEST 2002
         - Fixed a bug in the build() incantations, so that an object
           file will be created.
