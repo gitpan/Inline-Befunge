@@ -1,0 +1,7 @@
+Befunge.pm
+Changes
+MANIFEST
+Makefile.PL
+README
+t/01basic.t
+t/02subs.t
