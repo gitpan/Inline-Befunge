@@ -1,5 +1,11 @@
 Revision history for Perl extension Inline::Befunge.
 
+0.03 Tue Apr 16 18:43:13 CEST 2002
+        - Fixed a bug in the build() incantations, so that an object
+          file will be created.
+        - New options DEBUG accepted, to follow the IP(s) as they are
+          parsing the funge-space.
+
 0.02 Tue Apr 16 17:44:52 CEST 2002
         - Thanks to Sean O'Rourke, there is now a more natural and
           powerful method to fetch the subnames.

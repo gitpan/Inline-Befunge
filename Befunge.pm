@@ -1,4 +1,4 @@
-# $Id: Befunge.pm,v 1.2 2002/04/16 15:46:48 jquelin Exp $
+# $Id: Befunge.pm,v 1.3 2002/04/16 16:42:40 jquelin Exp $
 #
 # Copyright (c) 2002 Jerome Quelin <jquelin@cpan.org>
 # All rights reserved.
@@ -157,6 +157,24 @@ join the chars if you're waiting for a string!).
 
 =back
 
+
+=head2 Supported options
+
+C<Inline::Befunge> supports a DEBUG option, to follow the IP(s) as
+they are running on the funge-space.
+
+Use the following to activate it:
+
+    use Inline( Befunge => 'DATA',
+                DEBUG   => 1 );
+
+    ...
+    __END__
+    __Befunge__
+
+      Enter you befunge code here.
+
+
 =cut
 
 # A little anal retention ;-)
@@ -172,7 +190,7 @@ use Language::Befunge;
 use base qw! Inline !;
 
 # Public variables of the module.
-our $VERSION   = '0.02';
+our $VERSION   = '0.03';
 
 
 =head1 PUBLIC METHODS
@@ -199,11 +217,15 @@ supported.
 =cut
 sub validate {
     my $self = shift;
+
+    # Initializes funcs.
+    $self->{ILSM}{DEBUG} = 0;
+
     while(@_ >= 2) {
         my ($key, $value) = (shift, shift);
+        $key eq "DEBUG" and $self->{ILSM}{DEBUG} = $value, next;
         croak "Unsupported option found: '$key'.";
     }
-    #$bef->DEBUG(1);
 }
 
 
@@ -217,6 +239,10 @@ sub build {
     # The magic incantations to register.
     my $path = $self->{API}{install_lib}."/auto/".$self->{API}{modpname};
     $self->mkpath($path) unless -d $path;
+    my $file = $self->{API}{location};
+    open FOO_OBJ, "> $file" or croak "Can't open $file for output\n$!";
+    print FOO_OBJ $self->{API}{code};
+    close FOO_OBJ;
 }
 
 
@@ -235,6 +261,7 @@ sub load {
     my $code = $self->{API}{code};
     my $bef  = $self->{ILSM}{bef} =  new Language::Befunge;
     $bef->store_code( $code );
+    $bef->DEBUG( $self->{ILSM}{DEBUG} );
 
     # Parse the code.
     # Each subroutine should be:
