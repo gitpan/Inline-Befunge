@@ -1,5 +1,12 @@
 Revision history for Perl extension Inline::Befunge.
 
+0.02 Tue Apr 16 17:44:52 CEST 2002
+        - Thanks to Sean O'Rourke, there is now a more natural and
+          powerful method to fetch the subnames.
+        - tests update to reflect those changes.
+        - info now return the names of the subs defined.
+        - POD update.
+
 0.01 Mon Apr 15 18:00:43 CEST 2002
 	- Original, working version.
 

@@ -1,5 +1,5 @@
 # This -*- perl -*- script writes the Makefile for Language::Befunge
-# $Id: Makefile.PL,v 1.3 2002/04/15 14:31:06 jquelin Exp $
+# $Id: Makefile.PL,v 1.5 2002/04/16 15:43:33 jquelin Exp $
 
 use strict;
 use ExtUtils::MakeMaker;
@@ -9,10 +9,29 @@ $| = 1;
 my $missing_modules = 0;
 
 
-print "\nChecking for Language::Befunge...";
+print "Checking for Inline..............";
+eval {
+    require Inline;
+    Inline->VERSION(0.43);
+};
+if ($@) {
+    print " failed\n";
+    $missing_modules++;
+    print <<EOT;
+$@
+The Inline module must be installed. How do you want me to parse
+inlined subroutines if you don't provide me with this so cool module?
+
+EOT
+    sleep(2);  # Don't hurry too much
+} else {
+    print " ok\n";
+}
+
+print "Checking for Language::Befunge...";
 eval {
     require Language::Befunge;
-    Language::Befunge->VERSION(0.33);
+    Language::Befunge->VERSION(0.35);
 };
 if ($@) {
     print " failed\n";
@@ -41,7 +60,7 @@ print "\n";
 WriteMakefile(
     NAME          => 'Inline::Befunge',
     VERSION_FROM  => 'Befunge.pm',
-    PREREQ_PM	  => { Language::Befunge => 0.33 },
+    PREREQ_PM	  => { Inline => 0.43, Language::Befunge => 0.35 },
     clean         => { FILES => "*~ t/*~ MANIFEST.bak _Inline" },
     ABSTRACT_FROM => 'Befunge.pm',
     AUTHOR        => 'Jerome Quelin, <jquelin@cpan.org>',

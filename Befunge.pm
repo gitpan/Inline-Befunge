@@ -1,4 +1,4 @@
-# $Id: Befunge.pm,v 1.1 2002/04/15 15:43:21 jquelin Exp $
+# $Id: Befunge.pm,v 1.2 2002/04/16 15:46:48 jquelin Exp $
 #
 # Copyright (c) 2002 Jerome Quelin <jquelin@cpan.org>
 # All rights reserved.
@@ -23,11 +23,9 @@ Inline::Befunge - write Perl subs in Befunge
 
     __END__
     __Befunge__
-    BF-sub add
-    +q
+    ;:add; +q
 
-    BF-sub substract
-    -q
+    ;:substract; -q
 
 
 =head1 DESCRIPTION
@@ -50,7 +48,7 @@ For more details on C<Inline>, see C<perldoc Inline>.
 
 =head2 Feeding Inline with your code
 
-The recommended way of using Inline is this:
+The recommended way of using Inline is the following:
 
     use Inline Befunge;
 
@@ -68,12 +66,22 @@ Inline>.
 =head2 Defining functions
 
 As a befunge fan, you know that Befunge does not support named
-subroutines. So, I introduced a little hack in order for Inline to
-work: each subroutine definition should be prepended with C<BF-sub
-subname>, and the body of the function should be on the next lines.
+subroutines. So, I introduced a little hack (thank goes to Sean
+O'Rourke) in order for Inline to work: each subroutine definition
+should be prepended with a comment C<;:subname;> (notice the colon
+prepended).
 
-Of course, one can write more than one subroutine, as long as you
-prepend them with their name.
+You will notice how smart it is, since it's enclosed in comments, and
+therefore the overall meaning of the code isn't changed.
+
+You can define you subroutines in any of the four cardinal directions,
+and the subroutine velocity will be the velocity defined by the
+comment. That is, if you define a subroutine in a vertical comment
+from bottom to top, when called, the subroutine will start with a
+velocity of (0,-1).
+
+You can add comments after the subname. Thus, C<;:foo - a foo
+subroutine;> defines a new subroutine C<foo>.
 
 So, here's a valid example:
 
@@ -83,15 +91,23 @@ So, here's a valid example:
 
     __END__
     __Befunge__
-    BF-sub hello
-    <q_,#! #:<"Hello world!"a
+    ;:hello - print a msg;<q_,#! #:<"Hello world!"a
 
-    BF-sub add
-    +q
+        ;
+        :
+        a             q - ;tcartsbus:; 
+        d
+        d
+        ;
+        +  ;not a valid func def;
+        q
 
-In this example, I defined two functions: C<hello()> and C<add()>, and
-you can call them from within perl as if they were valid perl
-functions.
+
+In this example, I defined three functions: C<hello()>, C<add()> and
+C<substract>, and you can call them from within perl as if they were
+valid perl functions. The fourth comment C<;not a valid func def;>
+isn't a valid function definition since it lacks a colon C<:> just
+after the C<;>.
 
 
 =head2 Passing arguments
@@ -156,7 +172,7 @@ use Language::Befunge;
 use base qw! Inline !;
 
 # Public variables of the module.
-our $VERSION   = '0.01';
+our $VERSION   = '0.02';
 
 
 =head1 PUBLIC METHODS
@@ -187,6 +203,7 @@ sub validate {
         my ($key, $value) = (shift, shift);
         croak "Unsupported option found: '$key'.";
     }
+    #$bef->DEBUG(1);
 }
 
 
@@ -216,41 +233,44 @@ sub load {
 
     # Fetch code and create the interpreter.
     my $code = $self->{API}{code};
-    my $bef  =  new Language::Befunge;
+    my $bef  = $self->{ILSM}{bef} =  new Language::Befunge;
+    $bef->store_code( $code );
 
     # Parse the code.
     # Each subroutine should be:
-    # BF-sub subname1
-    # < @ ,,,,"foo"a
-    # BF-sub subname2
+    # ;:subname1; < @ ,,,,"foo"a
+    # ;:subname2;
     # etc.
-    my @elems = split /BF-sub (.+)\n/, $code;
-    shift @elems; # get rid of the garbage prepended.
-
-    while ( @elems ) {
-        my $subname = shift @elems;
-        my $subcode = shift @elems;
-
+    my $funcs = $bef->torus->labels_lookup;
+    $self->{ILSM}{funcs} = join " ", sort keys %$funcs;
+    
+    foreach my $subname ( keys %$funcs ) {
         no strict 'refs';
         *{"${pkg}::$subname"} = 
           sub {
               # Cosmetics.
               $bef->debug( "\n-= SUBROUTINE $subname =-\n" );
-              #$bef->DEBUG(1);
-              # Store code.
-              $bef->store_code( $subcode );
               $bef->file( "Inline-$subname" );
 
               # Create the first Instruction Pointer.
               my $ip = new Language::Befunge::IP;
+
+              # Move the IP at the beginning of the function.
+              $ip->curx( $funcs->{$subname}[0] );
+              $ip->cury( $funcs->{$subname}[1] );
+              $ip->dx( $funcs->{$subname}[2] );
+              $ip->dy( $funcs->{$subname}[3] );
+
+              # Fill the stack with arguments.
               foreach my $arg ( @_ ) {
-                  # Fill the stack with arguments.
                   $ip->spush
                     ( ($arg =~ /^-?\d+$/) ?
                         $arg                                    # A number.
                       : reverse map {ord} split //, $arg.chr(0) # A string.
                     );
               }
+
+              # Initialize the interpreter.
               $bef->ips( [ $ip ] );
               $bef->kcounter(-1);
               $bef->retval(0);
@@ -261,7 +281,7 @@ sub load {
               # Return the exit code and the TOSS.
               return $bef->lastip->end eq '@' ?
                   @{ $bef->lastip->toss }  # return the TOSS.
-                : $bef->retval;             # return exit code.
+                : $bef->retval;            # return exit code.
           };
 
     }
@@ -270,16 +290,14 @@ sub load {
 
 =head2 info(  )
 
-Return a small report about the Foo code.
+Return a small report about the Befunge code.
 
 =cut
 sub info {
     my $self = shift;
     my $text = <<'END';
-This is a Concurrent Befunge-98 interpreter. In fact, it's just a wrap
-around the Language::Befunge module.
-
-perldoc Language::Befunge for more information.
+The following functions have been defined via Inline::Befunge:
+$self->{ILSM}{funcs}
 END
     return $text;
 }
@@ -291,6 +309,31 @@ __END__
 =head1 AUTHOR
 
 Jerome Quelin, E<lt>jquelin@cpan.orgE<gt>
+
+
+=head1 ACKNOWLEDGEMENTS
+
+I would like to thank:
+
+=over 4
+
+=item o
+
+Brian Ingerson, for writing the incredibly cool C<Inline> module, and
+giving the world's programmers enough rope to hang themselves many
+times over.
+
+=item o
+
+Chris Pressey, creator of Befunge, who gave a whole new dimension to
+both coding and obfuscating.
+
+=item o
+
+Sean O'Rourke E<lt>seano@alumni.rice.eduE<gt> for his incredible cool
+idea on defining labels in Befunge code.
+
+=back
 
 
 =head1 COPYRIGHT
@@ -308,10 +351,6 @@ it under the same terms as Perl itself.
 =item L<Inline>
 
 =item L<Language::Befunge>
-
-=item L<http://www.catseye.mb.ca/esoteric/befunge/>
-
-=item L<http://dufflebunk.iwarp.com/JSFunge/spec98.html>
 
 =back
 

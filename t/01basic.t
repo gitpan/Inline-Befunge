@@ -1,5 +1,5 @@
 #-*- cperl -*-
-# $Id: 01basic.t,v 1.1 2002/04/15 14:09:50 jquelin Exp $
+# $Id: 01basic.t,v 1.2 2002/04/16 15:47:10 jquelin Exp $
 #
 
 #-------------------------------#
@@ -23,5 +23,4 @@ BEGIN { plan tests => $tests };
 
 __END__
 __Befunge__
-BF-sub foo
-< q,,,,"foo"a
+;:foo; < q,,,,"foo"a
