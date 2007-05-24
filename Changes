@@ -1,23 +1,44 @@
-Revision history for Perl extension Inline::Befunge.
+Revision history for Inline::Befunge.
+
+High-level changelog
+====================
+
+0.1.x   kwalitee release
+0.0x    initial work
+
+
+Low-level changelog
+===================
+
+0.1.0 Thu May 24 17:54:53 CEST 2007
+ - changed license to gpl
+ - fixed bug (hopefully) that made the tests to fail
+ - fixed bug in Makefile.PL missing prereq
+ - using standard lib/ layout
+ - change versioning to x.y.z
+ - provide build.pl as an alternative to makemaker
+ - docs & pod overhaul
+
+**
 
 0.04 Mon Apr 22 20:49:29 CEST 2002
-        - Minor pod update.
-        - Minor tweak in Makefile.PL (should not be necessary, but...)
-        - Taking advantage of IP::spush_args
+ - Minor pod update.
+ - Minor tweak in Makefile.PL (should not be necessary, but...)
+ - Taking advantage of IP::spush_args
 
 0.03 Tue Apr 16 18:43:13 CEST 2002
-        - Fixed a bug in the build() incantations, so that an object
-          file will be created.
-        - New options DEBUG accepted, to follow the IP(s) as they are
-          parsing the funge-space.
+ - Fixed a bug in the build() incantations, so that an object
+   file will be created.
+ - New options DEBUG accepted, to follow the IP(s) as they are
+   parsing the funge-space.
 
 0.02 Tue Apr 16 17:44:52 CEST 2002
-        - Thanks to Sean O'Rourke, there is now a more natural and
-          powerful method to fetch the subnames.
-        - tests update to reflect those changes.
-        - info now return the names of the subs defined.
-        - POD update.
+ - Thanks to Sean O'Rourke, there is now a more natural and
+   powerful method to fetch the subnames.
+ - tests update to reflect those changes.
+ - info now return the names of the subs defined.
+ - POD update.
 
 0.01 Mon Apr 15 18:00:43 CEST 2002
-	- Original, working version.
+ - Original, working version.
 

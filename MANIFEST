@@ -1,7 +1,12 @@
-Befunge.pm
+Build.PL
 Changes
-MANIFEST
+lib/Inline/Befunge.pm
+LICENSE
 Makefile.PL
+MANIFEST
+META.yml
 README
-t/01basic.t
-t/02subs.t
+t/00-load.t
+t/01-pod.t
+t/02-pod-coverage.t
+t/10-subs.t

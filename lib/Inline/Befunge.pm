@@ -1,13 +1,142 @@
-# $Id: Befunge.pm,v 1.5 2002/04/22 18:47:49 jquelin Exp $
+#!perl
 #
-# Copyright (c) 2002 Jerome Quelin <jquelin@cpan.org>
-# All rights reserved.
+# This file is part of Inline::Befunge.
+# Copyright (c) 2001-2007 Jerome Quelin, all rights reserved.
 #
-# This program is free software; you can redistribute it and/or
-# modify it under the same terms as Perl itself.
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or (at
+# your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+#
 #
 
 package Inline::Befunge;
+
+use strict;
+use warnings;
+
+use Carp;
+use Language::Befunge;
+require Inline; # use Inline forbidden.
+our @ISA = qw! Inline !; # not "use base" (use will take precedence over require)
+our $VERSION   = '0.1.0';
+
+
+sub register {
+    return
+      { language => 'Befunge',
+        aliases  => [ 'befunge', 'BEFUNGE', 'bef', 'BEF' ],
+        type     => 'interpreted',
+        suffix   => 'bef',
+      };
+}
+
+sub validate {
+    my $self = shift;
+
+    # Initializes funcs.
+    $self->{ILSM}{DEBUG} = 0;
+
+    while(@_ >= 2) {
+        my ($key, $value) = (shift, shift);
+        $key eq "DEBUG" and $self->{ILSM}{DEBUG} = $value, next;
+        croak "Unsupported option found: '$key'.";
+    }
+}
+
+
+sub build {
+    my $self = shift;
+    # The magic incantations to register.
+    my $path = $self->{API}{install_lib}."/auto/".$self->{API}{modpname};
+    $self->mkpath($path) unless -d $path;
+    my $file = $self->{API}{location};
+    open FOO_OBJ, "> $file" or croak "Can't open $file for output\n$!";
+    print FOO_OBJ $self->{API}{code};
+    close FOO_OBJ;
+}
+
+
+sub load {
+    # Fetch object and package.
+    my $self = shift;
+    my $pkg  = $self->{API}{pkg} || 'main';
+
+    # Fetch code and create the interpreter.
+    my $code = $self->{API}{code};
+    my $bef  = $self->{ILSM}{bef} =  new Language::Befunge;
+    $bef->store_code( $code );
+    $bef->set_DEBUG( $self->{ILSM}{DEBUG} );
+
+    # Parse the code.
+    # Each subroutine should be:
+    # ;:subname1; < @ ,,,,"foo"a
+    # ;:subname2;
+    # etc.
+    my $funcs = $bef->get_torus->labels_lookup;
+    $self->{ILSM}{funcs} = join " ", sort keys %$funcs;
+
+    foreach my $subname ( keys %$funcs ) {
+        no strict 'refs';
+        *{"${pkg}::$subname"} =
+          sub {
+              # Cosmetics.
+              $bef->debug( "\n-= SUBROUTINE $subname =-\n" );
+              $bef->set_file( "Inline-$subname" );
+
+              # Create the first Instruction Pointer.
+              my $ip = new Language::Befunge::IP;
+
+              # Move the IP at the beginning of the function.
+              $ip->set_curx( $funcs->{$subname}[0] );
+              $ip->set_cury( $funcs->{$subname}[1] );
+              $ip->set_dx( $funcs->{$subname}[2] );
+              $ip->set_dy( $funcs->{$subname}[3] );
+
+              # Fill the stack with arguments.
+              $ip->spush_args( @_ );
+
+              # Initialize the interpreter.
+              $bef->set_ips( [ $ip ] );
+              #$bef->set_kcounter(-1);
+              $bef->set_retval(0);
+
+              # Loop as long as there are IPs.
+              $bef->next_tick while scalar @{ $bef->get_ips };
+
+              # Return the exit code and the TOSS.
+#               return $bef->lastip->end eq '@' ?
+#                   @{ $bef->lastip->toss }  # return the TOSS.
+#                 : $bef->retval;            # return exit code.
+              return $bef->get_retval;  # quick'n'dirty bugfix
+          };
+
+    }
+}
+
+
+sub info {
+    my $self = shift;
+    my $text = <<'END';
+The following functions have been defined via Inline::Befunge:
+$self->{ILSM}{funcs}
+END
+    return $text;
+}
+
+
+1;
+__END__
+
 
 =head1 NAME
 
@@ -19,13 +148,13 @@ Inline::Befunge - write Perl subs in Befunge
     use Inline "Befunge";
 
     print "9 + 16 = ", add(9, 16), "\n";
-    print "9 - 16 = ", substract(9, 16),"\n";
+    print "9 - 16 = ", subtract(9, 16),"\n";
 
     __END__
     __Befunge__
     ;:add; +q
 
-    ;:substract; -q
+    ;:subtract; -q
 
 
 =head1 DESCRIPTION
@@ -41,7 +170,7 @@ This allows you to write cool stuff with all the power of Befunge!
 Using C<Inline::Befunge> will seem very similar to using a another
 Inline language, thanks to Inline's consistent look and feel.
 
-This section will explain how to use C<Inline::Befunge>. 
+This section will explain how to use C<Inline::Befunge>.
 
 For more details on C<Inline>, see C<perldoc Inline>.
 
@@ -95,7 +224,7 @@ So, here's a valid example:
 
         ;
         :
-        a             q - ;tcartsbus:; 
+        a             q - ;tcartsbus:;
         d
         d
         ;
@@ -118,7 +247,7 @@ TOSS of the interpreter: this means the stack may not be empty at the
 beginning of the run. If you're a purist, then you may ignore this and
 call your functions without arguments, and the stack will be empty.
 
-Strings are pushed as 0gnirts. 
+Strings are pushed as 0gnirts.
 
 B</!\> Remember, Befunge works with a stack: the first argument will
 be the first pushed, ie, the deeper in the stack.
@@ -175,75 +304,22 @@ Use the following to activate it:
       Enter you befunge code here.
 
 
-=cut
-
-# A little anal retention ;-)
-use strict;
-use warnings;
-
-# Modules we relied upon.
-use Carp;       # This module can't explode :o)
-require Inline; # use Inline forbidden.
-use Language::Befunge;
-
-# Inheritance.
-use base qw! Inline !;
-
-# Public variables of the module.
-our $VERSION   = '0.04';
-
-
 =head1 PUBLIC METHODS
 
 =head2 register(  )
 
 Register as an Inline Language Support Module.
 
-=cut
-sub register {
-    return 
-      { language => 'Befunge',
-        aliases  => [ 'befunge', 'BEFUNGE', 'bf', 'BF' ],
-        type     => 'interpreted',
-        suffix   => 'bf',
-      };
-}
 
 =head2 validate(  )
 
 Check the params for the Befunge interpreter. Currently no options are
 supported.
 
-=cut
-sub validate {
-    my $self = shift;
-
-    # Initializes funcs.
-    $self->{ILSM}{DEBUG} = 0;
-
-    while(@_ >= 2) {
-        my ($key, $value) = (shift, shift);
-        $key eq "DEBUG" and $self->{ILSM}{DEBUG} = $value, next;
-        croak "Unsupported option found: '$key'.";
-    }
-}
-
 
 =head2 build(  )
 
 Register the Befunge as a valid Inline extension.
-
-=cut
-sub build {
-    my $self = shift;
-    # The magic incantations to register.
-    my $path = $self->{API}{install_lib}."/auto/".$self->{API}{modpname};
-    $self->mkpath($path) unless -d $path;
-    my $file = $self->{API}{location};
-    open FOO_OBJ, "> $file" or croak "Can't open $file for output\n$!";
-    print FOO_OBJ $self->{API}{code};
-    close FOO_OBJ;
-}
 
 
 =head2 load(  )
@@ -251,85 +327,23 @@ sub build {
 This function actually fetches the Befunge code. It first splits it to
 find the functions.
 
-=cut
-sub load {
-    # Fetch object and package.
-    my $self = shift;
-    my $pkg  = $self->{API}{pkg} || 'main';
-
-    # Fetch code and create the interpreter.
-    my $code = $self->{API}{code};
-    my $bef  = $self->{ILSM}{bef} =  new Language::Befunge;
-    $bef->store_code( $code );
-    $bef->DEBUG( $self->{ILSM}{DEBUG} );
-
-    # Parse the code.
-    # Each subroutine should be:
-    # ;:subname1; < @ ,,,,"foo"a
-    # ;:subname2;
-    # etc.
-    my $funcs = $bef->torus->labels_lookup;
-    $self->{ILSM}{funcs} = join " ", sort keys %$funcs;
-    
-    foreach my $subname ( keys %$funcs ) {
-        no strict 'refs';
-        *{"${pkg}::$subname"} = 
-          sub {
-              # Cosmetics.
-              $bef->debug( "\n-= SUBROUTINE $subname =-\n" );
-              $bef->file( "Inline-$subname" );
-
-              # Create the first Instruction Pointer.
-              my $ip = new Language::Befunge::IP;
-
-              # Move the IP at the beginning of the function.
-              $ip->curx( $funcs->{$subname}[0] );
-              $ip->cury( $funcs->{$subname}[1] );
-              $ip->dx( $funcs->{$subname}[2] );
-              $ip->dy( $funcs->{$subname}[3] );
-
-              # Fill the stack with arguments.
-              $ip->spush_args( @_ );
-
-              # Initialize the interpreter.
-              $bef->ips( [ $ip ] );
-              $bef->kcounter(-1);
-              $bef->retval(0);
-
-              # Loop as long as there are IPs.
-              $bef->next_tick while scalar @{ $bef->ips };
-
-              # Return the exit code and the TOSS.
-              return $bef->lastip->end eq '@' ?
-                  @{ $bef->lastip->toss }  # return the TOSS.
-                : $bef->retval;            # return exit code.
-          };
-
-    }
-}
-
 
 =head2 info(  )
 
 Return a small report about the Befunge code.
 
-=cut
-sub info {
-    my $self = shift;
-    my $text = <<'END';
-The following functions have been defined via Inline::Befunge:
-$self->{ILSM}{funcs}
-END
-    return $text;
-}
 
+=head1 SEE ALSO
 
-1;
-__END__
+=over 4
 
-=head1 AUTHOR
+=item L<perl>
 
-Jerome Quelin, E<lt>jquelin@cpan.orgE<gt>
+=item L<Inline>
+
+=item L<Language::Befunge>
+
+=back
 
 
 =head1 ACKNOWLEDGEMENTS
@@ -357,23 +371,29 @@ idea on defining labels in Befunge code.
 =back
 
 
-=head1 COPYRIGHT
+=head1 AUTHOR
+
+Jerome Quelin, C<< <jquelin at cpan.org> >>
+
+
+=head1 COPYRIGHT AND LICENCE
+
+Copyright (C) 2001-2007 Jerome Quelin
 
 This program is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself.
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
 
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
 
-=head1 SEE ALSO
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-=over 4
-
-=item L<perl>
-
-=item L<Inline>
-
-=item L<Language::Befunge>
-
-=back
 
 =cut
 
