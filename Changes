@@ -3,12 +3,19 @@ Revision history for Inline::Befunge.
 High-level changelog
 ====================
 
+0.5.x   keeping cpan happy
 0.1.x   kwalitee release
 0.0x    initial work
 
 
 Low-level changelog
 ===================
+
+0.5.0 Fri May 25 18:40:25 CEST 2007
+ - bump in version in order to make cpan happy (stupid versioning using 2
+   digits).
+
+**
 
 0.1.1 Fri May 25 17:20:46 CEST 2007
  - changed license back to perl
