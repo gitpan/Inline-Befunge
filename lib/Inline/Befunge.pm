@@ -16,7 +16,7 @@ use Carp;
 use Language::Befunge;
 require Inline; # use Inline forbidden.
 our @ISA = qw! Inline !; # not "use base" (use will take precedence over require)
-our $VERSION   = '0.5.0';
+our $VERSION   = '1.0.0';
 
 
 sub register {

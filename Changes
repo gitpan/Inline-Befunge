@@ -3,6 +3,7 @@ Revision history for Inline::Befunge.
 High-level changelog
 ====================
 
+1.0.x   working release
 0.5.x   keeping cpan happy
 0.1.x   kwalitee release
 0.0x    initial work
@@ -10,6 +11,12 @@ High-level changelog
 
 Low-level changelog
 ===================
+
+1.0.0 Fri May 25 19:26:10 CEST 2007
+ - ditto (why oh why 0.04 is higher than 0.5?). anyway, since it's
+   working now, i can bump to 1.0.0
+
+**
 
 0.5.0 Fri May 25 18:40:25 CEST 2007
  - bump in version in order to make cpan happy (stupid versioning using 2
