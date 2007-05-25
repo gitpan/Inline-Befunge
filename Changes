@@ -10,6 +10,9 @@ High-level changelog
 Low-level changelog
 ===================
 
+0.1.1 Fri May 25 17:20:46 CEST 2007
+ - changed license back to perl
+
 0.1.0 Thu May 24 17:54:53 CEST 2007
  - changed license to gpl
  - fixed bug (hopefully) that made the tests to fail
