@@ -16,7 +16,7 @@ use Carp;
 use Language::Befunge;
 require Inline; # use Inline forbidden.
 our @ISA = qw! Inline !; # not "use base" (use will take precedence over require)
-our $VERSION   = '1.0.0';
+our $VERSION   = '1.1.0';
 
 
 sub register {
@@ -61,7 +61,7 @@ sub load {
 
     # Fetch code and create the interpreter.
     my $code = $self->{API}{code};
-    my $bef  = $self->{ILSM}{bef} =  new Language::Befunge;
+    my $bef  = $self->{ILSM}{bef} = Language::Befunge->new;
     $bef->store_code( $code );
     $bef->set_DEBUG( $self->{ILSM}{DEBUG} );
 
@@ -82,13 +82,19 @@ sub load {
               $bef->set_file( "Inline-$subname" );
 
               # Create the first Instruction Pointer.
-              my $ip = new Language::Befunge::IP;
+              my $ip = Language::Befunge::IP->new ;
 
               # Move the IP at the beginning of the function.
-              $ip->set_curx( $funcs->{$subname}[0] );
-              $ip->set_cury( $funcs->{$subname}[1] );
-              $ip->set_dx( $funcs->{$subname}[2] );
-              $ip->set_dy( $funcs->{$subname}[3] );
+              my $pos = Language::Befunge::Vector->new( 2,
+                  $funcs->{$subname}[0],
+                  $funcs->{$subname}[1],
+              );
+              $ip->set_position($pos);
+              my $delta = Language::Befunge::Vector->new( 2,
+                  $funcs->{$subname}[2],
+                  $funcs->{$subname}[3],
+              );
+              $ip->set_delta($delta);
 
               # Fill the stack with arguments.
               $ip->spush_args( @_ );
