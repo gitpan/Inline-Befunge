@@ -13,8 +13,13 @@ High-level changelog
 Low-level changelog
 ===================
 
+1.1.1 Mon Nov 26 13:18:10 CET 2007
+ - kwalitee/cpants release
+
 1.1.0 Wed Oct 24 15:21:06 CEST 2007
  - fixed to work with Language::Befunge 3.00 semantics (vectors)
+
+**
 
 1.0.0 Fri May 25 19:26:10 CEST 2007
  - ditto (why oh why 0.04 is higher than 0.5?). anyway, since it's

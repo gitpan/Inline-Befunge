@@ -21,7 +21,7 @@ WriteMakefile(
     PL_FILES            => {},
     PREREQ_PM => {
 		'Inline'            => '0.43',
-		'Language::Befunge' => '0.36',
+		'Language::Befunge' => '3.00',
     },
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean => { FILES => [

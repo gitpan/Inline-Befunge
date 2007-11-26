@@ -19,10 +19,17 @@ my $builder = Module::Build->new (
     add_to_cleanup => [
                 'Inline-Befunge-*', '_Inline',
                 map { ( '*/' x $_ ) . '*~' } 0..3 ],
-    build_requires => { },
+    build_requires => {
+        'Inline'            => '0.43',
+        'Language::Befunge' => '3.00',
+    },
     requires => {
         'Inline'            => '0.43',
-        'Language::Befunge' => '0.36',
+        'Language::Befunge' => '3.00',
+    },
+    recommends     => {
+        'Test::Pod'           => 0,
+        'Test::Pod::Coverage' => 0,
     },
 );
 
